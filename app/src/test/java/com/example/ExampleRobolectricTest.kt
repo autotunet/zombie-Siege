@@ -66,4 +66,26 @@ class ExampleRobolectricTest {
         assertEquals("ca-app-pub-1495262574338316/2714752655", com.example.ads.AdMobConstants.INTERSTITIAL_REVIVE)
         assertEquals("ca-app-pub-1495262574338316/3503687777", com.example.ads.AdMobConstants.INTERSTITIAL_SHOP)
     }
+
+    @Test
+    fun `test milestones system rewards and targets`() {
+        val headshot = com.example.model.MilestoneId.HEADSHOT_SNIPER
+        val kills100 = com.example.model.MilestoneId.KILLS_100
+        val wave10 = com.example.model.MilestoneId.WAVE_10
+
+        assertEquals("Disparo a la cabeza", headshot.title)
+        assertTrue(headshot.rewardPoints > 0)
+        assertTrue(headshot.rewardCoins > 0)
+
+        assertEquals("100 zombis eliminados", kills100.title)
+        assertEquals(100, kills100.targetGoal)
+        assertEquals(400, kills100.rewardPoints)
+
+        assertEquals("Oleada 10 alcanzada", wave10.title)
+        assertEquals(10, wave10.targetGoal)
+        assertEquals(600, wave10.rewardPoints)
+
+        val notification = com.example.model.ActiveMilestoneNotification(headshot)
+        assertEquals(headshot, notification.milestone)
+    }
 }

@@ -19,10 +19,12 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import kotlinx.coroutines.delay
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -48,7 +50,23 @@ fun AdMobBanner(
 ) {
     var adLoaded by remember { mutableStateOf(false) }
     var adError by remember { mutableStateOf<String?>(null) }
-    val context = LocalContext.current
+    var shouldAttach by remember { mutableStateOf(false) }
+    var currentAdView by remember { mutableStateOf<AdView?>(null) }
+
+    LaunchedEffect(adUnitId) {
+        // Delay attachment to let the initial frame render and avoid concurrent WebView seed initialization
+        delay(500L)
+        shouldAttach = true
+    }
+
+    DisposableEffect(adUnitId) {
+        onDispose {
+            try {
+                currentAdView?.destroy()
+                currentAdView = null
+            } catch (_: Throwable) {}
+        }
+    }
 
     val borderColor = if (isVip) Color(0xFFFFD54F) else Color(0xFF4285F4)
     val tagColor = if (isVip) Color(0xFFFFB300) else Color(0xFF1E88E5)
@@ -109,37 +127,45 @@ fun AdMobBanner(
                     .height(50.dp),
                 contentAlignment = Alignment.Center
             ) {
-                AndroidView(
-                    modifier = Modifier.testTag(if (isVip) "admob_banner_vip" else "admob_banner_standard"),
-                    factory = { ctx ->
-                        AdView(ctx).apply {
-                            setLayerType(android.view.View.LAYER_TYPE_SOFTWARE, null)
-                            setAdSize(AdSize.BANNER)
-                            this.adUnitId = adUnitId
-                            adListener = object : AdListener() {
-                                override fun onAdLoaded() {
-                                    super.onAdLoaded()
-                                    adLoaded = true
-                                    adError = null
-                                    Log.d("AdMobBanner", "Banner loaded for $adUnitId")
-                                }
+                if (shouldAttach) {
+                    AndroidView(
+                        modifier = Modifier.testTag(if (isVip) "admob_banner_vip" else "admob_banner_standard"),
+                        factory = { ctx ->
+                            try {
+                                AdView(ctx).apply {
+                                    setLayerType(android.view.View.LAYER_TYPE_SOFTWARE, null)
+                                    setAdSize(AdSize.BANNER)
+                                    this.adUnitId = adUnitId
+                                    adListener = object : AdListener() {
+                                        override fun onAdLoaded() {
+                                            super.onAdLoaded()
+                                            adLoaded = true
+                                            adError = null
+                                            Log.d("AdMobBanner", "Banner loaded for $adUnitId")
+                                        }
 
-                                override fun onAdFailedToLoad(error: LoadAdError) {
-                                    super.onAdFailedToLoad(error)
-                                    adLoaded = false
-                                    adError = error.message
-                                    Log.w("AdMobBanner", "Banner failed for $adUnitId: ${error.message} (code: ${error.code})")
+                                        override fun onAdFailedToLoad(error: LoadAdError) {
+                                            super.onAdFailedToLoad(error)
+                                            adLoaded = false
+                                            adError = error.message
+                                            Log.w("AdMobBanner", "Banner notice for $adUnitId: ${error.message} (code: ${error.code})")
+                                        }
+                                    }
+                                    val extras = android.os.Bundle().apply { putString("npa", "1") }
+                                    loadAd(
+                                        AdRequest.Builder()
+                                            .addNetworkExtrasBundle(com.google.ads.mediation.admob.AdMobAdapter::class.java, extras)
+                                            .build()
+                                    )
+                                    currentAdView = this
                                 }
+                            } catch (e: Throwable) {
+                                Log.w("AdMobBanner", "AdView creation notice: ${e.message}")
+                                android.view.View(ctx)
                             }
-                            val extras = android.os.Bundle().apply { putString("npa", "1") }
-                            loadAd(
-                                AdRequest.Builder()
-                                    .addNetworkExtrasBundle(com.google.ads.mediation.admob.AdMobAdapter::class.java, extras)
-                                    .build()
-                            )
                         }
-                    }
-                )
+                    )
+                }
 
                 // Placeholder preview while loading or if fill pending in emulator
                 if (!adLoaded) {

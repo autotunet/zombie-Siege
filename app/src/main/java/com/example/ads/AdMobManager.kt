@@ -15,8 +15,11 @@ import com.google.android.gms.ads.rewarded.RewardItem
 import com.google.android.gms.ads.rewarded.RewardedAd
 import com.google.android.gms.ads.rewarded.RewardedAdLoadCallback
 
+import java.util.concurrent.atomic.AtomicBoolean
+
 class AdMobManager private constructor(private val appContext: Context) {
 
+    private val isInitializing = AtomicBoolean(false)
     private var isInitialized = false
 
     private var vipRewardedAd: RewardedAd? = null
@@ -32,7 +35,8 @@ class AdMobManager private constructor(private val appContext: Context) {
         initSdk()
     }
 
-    private fun initSdk() {
+    fun initSdk() {
+        if (!isInitializing.compareAndSet(false, true)) return
         try {
             val reqConfig = RequestConfiguration.Builder()
                 .setTestDeviceIds(listOf(AdRequest.DEVICE_ID_EMULATOR))

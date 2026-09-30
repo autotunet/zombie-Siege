@@ -1,5 +1,8 @@
 package com.example
 
+import android.content.pm.ActivityInfo
+import android.graphics.PixelFormat
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -34,20 +37,29 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        try {
+            window.setFormat(PixelFormat.RGBA_8888)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                window.colorMode = ActivityInfo.COLOR_MODE_DEFAULT
+            }
+        } catch (_: Throwable) {}
+
         enableEdgeToEdge()
 
         // 1. Initialize Google Mobile Ads SDK on background dispatcher to optimize startup
-        val requestConfiguration = RequestConfiguration.Builder()
-            .setTestDeviceIds(listOf(AdRequest.DEVICE_ID_EMULATOR))
-            .setTagForChildDirectedTreatment(RequestConfiguration.TAG_FOR_CHILD_DIRECTED_TREATMENT_TRUE)
-            .build()
-        MobileAds.setRequestConfiguration(requestConfiguration)
-
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                MobileAds.initialize(this@MainActivity) { initializationStatus ->
-                    Log.d(tag, "Google Mobile Ads SDK successfully initialized: $initializationStatus")
+                // Remove any corrupt zero-length variation seed files that trigger variations_seed_loader errors
+                val webViewDir = java.io.File(applicationContext.dataDir, "app_webview")
+                if (webViewDir.exists()) {
+                    listOf("variations_seed", "variations_seed_new", "variations_stamp").forEach { name ->
+                        val f = java.io.File(webViewDir, name)
+                        if (f.exists() && f.length() == 0L) {
+                            f.delete()
+                        }
+                    }
                 }
+                AdMobManager.getInstance(applicationContext).initSdk()
             } catch (e: Exception) {
                 Log.w(tag, "MobileAds init notice: ${e.message}")
             }

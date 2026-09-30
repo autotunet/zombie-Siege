@@ -24,5 +24,6 @@ data class PlayerProfileEntity(
     val lifetimeKills: Int = 0,
     val barricadeLevel: Int = 1, // 1 to 5
     val unlockedWeapons: String = "pistol", // comma-separated weapon IDs
-    val weaponLevels: String = "pistol:1" // format: pistol:1,shotgun:1
+    val weaponLevels: String = "pistol:1", // format: pistol:1,shotgun:1
+    val unlockedMilestones: String = "" // comma-separated MilestoneId names
 )

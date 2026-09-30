@@ -12,8 +12,10 @@ import com.example.data.GameDatabase
 import com.example.data.GameRecordEntity
 import com.example.data.GameRepository
 import com.example.data.PlayerProfileEntity
+import com.example.model.ActiveMilestoneNotification
 import com.example.model.GameStatus
 import com.example.model.GroundDecal
+import com.example.model.MilestoneId
 import com.example.model.Particle
 import com.example.model.Projectile
 import com.example.model.ShellCasing
@@ -83,7 +85,9 @@ data class GameUiState(
     val pointsBarricadeLevel: Int = 1,
     val isPointsUpgradeOpen: Boolean = false,
     val optionsMenuOpen: Boolean = false,
-    val feedbackMessage: String? = null
+    val feedbackMessage: String? = null,
+    val activeMilestoneNotification: ActiveMilestoneNotification? = null,
+    val unlockedMilestones: Set<String> = emptySet()
 ) {
     val globalDamageMultiplier: Float
         get() = 1f + (pointsDamageLevel - 1) * 0.15f
@@ -133,6 +137,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
     private var lastFireTimestamp: Long = 0L
     private var lastSpawnTimestamp: Long = 0L
     private var idCounter: Long = 1000L
+    private val unlockedMilestonesSet = mutableSetOf<String>()
 
     init {
         val database = GameDatabase.getInstance(application)
@@ -178,6 +183,10 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
                     if (parts.size == 2) parts[0] to (parts[1].toIntOrNull() ?: 1) else null
                 }.toMap()
 
+            val savedMilestones = profile.unlockedMilestones.split(",").filter { it.isNotBlank() }
+            unlockedMilestonesSet.clear()
+            unlockedMilestonesSet.addAll(savedMilestones)
+
             _uiState.update { current ->
                 val updatedWeapons = current.weapons.map { w ->
                     val isUnlocked = unlockedSet.contains(w.type.id) || w.type == WeaponType.PISTOL
@@ -194,10 +203,60 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
                     barricadeMaxHp = maxHp,
                     barricadeCurrentHp = maxHp,
                     barricadeSpikesLevel = (profile.barricadeLevel - 1).coerceAtLeast(0),
-                    weapons = updatedWeapons
+                    weapons = updatedWeapons,
+                    unlockedMilestones = unlockedMilestonesSet.toSet()
                 )
             }
         }
+    }
+
+    fun checkMilestone(milestoneId: MilestoneId) {
+        if (unlockedMilestonesSet.contains(milestoneId.name)) return
+        unlockedMilestonesSet.add(milestoneId.name)
+
+        val bonusScore = milestoneId.rewardPoints
+        val bonusCoins = milestoneId.rewardCoins
+
+        _uiState.update { current ->
+            current.copy(
+                score = current.score + bonusScore,
+                coins = current.coins + bonusCoins,
+                unlockedMilestones = unlockedMilestonesSet.toSet(),
+                activeMilestoneNotification = ActiveMilestoneNotification(milestoneId)
+            )
+        }
+
+        audio.playWaveClear()
+        audio.vibrateHeavy()
+        spawnDamageText(0.5f, 0.40f, "¡HITO: ${milestoneId.title.uppercase()}! 🏆", Color(0xFFFFD54F))
+
+        viewModelScope.launch {
+            try {
+                val currentProfile = repository.getProfileDirect()
+                val updatedMilestones = unlockedMilestonesSet.joinToString(",")
+                repository.updateProfile(
+                    currentProfile.copy(
+                        totalCoins = _uiState.value.coins,
+                        unlockedMilestones = updatedMilestones
+                    )
+                )
+            } catch (_: Exception) {}
+        }
+
+        viewModelScope.launch {
+            delay(3800L)
+            _uiState.update { current ->
+                if (current.activeMilestoneNotification?.milestone == milestoneId) {
+                    current.copy(activeMilestoneNotification = null)
+                } else {
+                    current
+                }
+            }
+        }
+    }
+
+    fun dismissMilestoneNotification() {
+        _uiState.update { it.copy(activeMilestoneNotification = null) }
     }
 
     fun startGame() {
@@ -278,6 +337,9 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
                 currentBossHpRatio = if (isBossWave) 1f else 0f
             )
         }
+
+        if (waveNumber >= 5) checkMilestone(MilestoneId.WAVE_5)
+        if (waveNumber >= 10) checkMilestone(MilestoneId.WAVE_10)
 
         lastSpawnTimestamp = System.currentTimeMillis() + 800L
     }
@@ -499,6 +561,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
 
                         if (isHeadshot) {
                             spawnDamageText(zombie.x, zombie.y, "CRÍTICO -${actualDamage.toInt()} 🎯", Color(0xFFFFD54F))
+                            checkMilestone(MilestoneId.HEADSHOT_SNIPER)
                         } else {
                             spawnDamageText(zombie.x, zombie.y, "-${actualDamage.toInt()}", Color.White)
                         }
@@ -611,6 +674,15 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         if (newCombo >= 3) {
             spawnDamageText(zombie.x, zombie.y - 0.04f, "COMBO x$newCombo 🔥", Color(0xFFFF9100))
         }
+
+        // Milestone progression triggers
+        checkMilestone(MilestoneId.FIRST_BLOOD)
+        val lifetimeKills = (playerProfile.value?.lifetimeKills ?: 0) + _uiState.value.totalRunKills
+        if (lifetimeKills >= 25) checkMilestone(MilestoneId.KILLS_25)
+        if (lifetimeKills >= 100) checkMilestone(MilestoneId.KILLS_100)
+        if (lifetimeKills >= 250) checkMilestone(MilestoneId.KILLS_250)
+        if (zombie.type == ZombieType.BOSS) checkMilestone(MilestoneId.BOSS_SLAYER)
+        if (newCombo >= 5) checkMilestone(MilestoneId.COMBO_STREAK_5)
 
         // Persistent Blood Pool Ground Decal
         activeDecals.add(
@@ -1020,6 +1092,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
                 barricadeSpikesLevel = it.barricadeSpikesLevel + 1
             )
         }
+        checkMilestone(MilestoneId.BARRICADE_UPGRADE)
         saveProgressionToDb()
         return true
     }
@@ -1399,6 +1472,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
                     feedbackMessage = "¡Blindaje aumentado a Nivel $nextLvl! (+${(nextLvl - 1) * 8}% Resistencia & +35 HP)"
                 )
             }
+            checkMilestone(MilestoneId.BARRICADE_UPGRADE)
             spawnDamageText(_uiState.value.soldierNormX, 0.78f, "+35 HP & BLINDAJE MEJORADO 🛡️", Color(0xFF00E676))
         }
     }

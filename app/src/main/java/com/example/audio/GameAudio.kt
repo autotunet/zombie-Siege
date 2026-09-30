@@ -141,7 +141,7 @@ class GameAudio(private val context: Context) {
         vibrateHeavy()
     }
 
-    private fun vibrateLight() {
+    fun vibrateLight() {
         if (!hapticsEnabled || vibrator == null || !vibrator.hasVibrator()) return
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -165,7 +165,7 @@ class GameAudio(private val context: Context) {
         } catch (_: Exception) {}
     }
 
-    private fun vibrateHeavy() {
+    fun vibrateHeavy() {
         if (!hapticsEnabled || vibrator == null || !vibrator.hasVibrator()) return
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {

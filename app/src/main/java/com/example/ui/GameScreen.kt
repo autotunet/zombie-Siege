@@ -263,6 +263,15 @@ fun GameScreen(viewModel: GameViewModel) {
                 onDismiss = { viewModel.closePointsUpgradeMenu() }
             )
         }
+
+        // Floating Visual Milestone Notification Banner
+        MilestoneNotificationBanner(
+            notification = uiState.activeMilestoneNotification,
+            onDismiss = { viewModel.dismissMilestoneNotification() },
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .statusBarsPadding()
+        )
     }
 }
 
