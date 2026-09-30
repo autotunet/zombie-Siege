@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Crossed Rifles silhouette in background of skull -->
+    <path
+        android:fillColor="#E0E0E0"
+        android:pathData="M28,28 L34,26 L48,50 L44,53 Z" />
+    <path
+        android:fillColor="#E0E0E0"
+        android:pathData="M80,28 L74,26 L60,50 L64,53 Z" />
+    <path
+        android:fillColor="#B0BEC5"
+        android:pathData="M24,24 L84,84 L80,88 L20,28 Z" />
+    <path
+        android:fillColor="#B0BEC5"
+        android:pathData="M84,24 L24,84 L28,88 L88,28 Z" />
+
+    <!-- Zombie Skull Cranium -->
+    <path
+        android:fillColor="#ECEFF1"
+        android:pathData="M54,26 C40,26 34,36 34,48 C34,57 38,62 42,67 L42,75 C42,77 44,79 46,79 L62,79 C64,79 66,77 66,75 L66,67 C70,62 74,57 74,48 C74,36 68,26 54,26 Z" />
+
+    <!-- Toxic Infected Crack / Veins on Skull -->
+    <path
+        android:strokeColor="#00E676"
+        android:strokeWidth="2"
+        android:pathData="M48,30 L52,38 L49,43 L53,49" />
+
+    <!-- Eye Sockets (menacing dark with toxic green glow pupils) -->
+    <!-- Left Eye -->
+    <path
+        android:fillColor="#1A1A1A"
+        android:pathData="M42,47 C42,43 49,44 49,49 C49,54 44,54 42,47 Z" />
+    <path
+        android:fillColor="#00FF66"
+        android:pathData="M44,48 A2.5,2.5 0 1,0 49,48 A2.5,2.5 0 1,0 44,48" />
+
+    <!-- Right Eye -->
+    <path
+        android:fillColor="#1A1A1A"
+        android:pathData="M66,47 C66,43 59,44 59,49 C59,54 64,54 66,47 Z" />
+    <path
+        android:fillColor="#00FF66"
+        android:pathData="M61,48 A2.5,2.5 0 1,0 66,48 A2.5,2.5 0 1,0 61,48" />
+
+    <!-- Nasal Cavity -->
+    <path
+        android:fillColor="#1A1A1A"
+        android:pathData="M54,53 L51,60 L57,60 Z" />
+
+    <!-- Teeth / Jaw Detail -->
+    <path
+        android:fillColor="#1A1A1A"
+        android:pathData="M45,71 L47,71 L47,78 L45,78 Z" />
+    <path
+        android:fillColor="#1A1A1A"
+        android:pathData="M50,70 L52,70 L52,78 L50,78 Z" />
+    <path
+        android:fillColor="#1A1A1A"
+        android:pathData="M56,70 L58,70 L58,78 L56,78 Z" />
+    <path
+        android:fillColor="#1A1A1A"
+        android:pathData="M61,71 L63,71 L63,78 L61,78 Z" />
+
+    <!-- Blood / Splatter Splashes -->
+    <path
+        android:fillColor="#FF1744"
+        android:pathData="M37,42 C35,40 33,43 35,45 C37,47 39,44 37,42 Z" />
+    <path
+        android:fillColor="#FF1744"
+        android:pathData="M70,59 C68,57 66,61 68,63 C70,65 72,62 70,59 Z" />
+    <path
+        android:fillColor="#FF1744"
+        android:pathData="M53,66 L55,66 L54,74 Z" />
+</vector>

@@ -1,0 +1,6 @@
+{
+  "name": "Zombie Siege",
+  "description": "Juego de acción y supervivencia donde defiendes tu barricada contra hordas de zombis en oleadas progresivas de dificultad creciente con un poderoso arsenal de armas.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

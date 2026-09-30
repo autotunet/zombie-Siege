@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">Zombie Siege</string>
+    <string name="google_app_id" translatable="false">1:1495262574338316:android:694f71a084ef757820bb29</string>
+    <string name="gcm_defaultSenderId" translatable="false">1495262574338316</string>
+    <string name="default_web_client_id" translatable="false">1495262574338316-local.apps.googleusercontent.com</string>
+    <string name="firebase_database_url" translatable="false">https://zombie-siege-admob.firebaseio.com</string>
+    <string name="google_api_key" translatable="false">AIzaSyLocalZombieSiegeClientApiKeyPlaceholder</string>
+    <string name="google_storage_bucket" translatable="false">zombie-siege-admob.appspot.com</string>
+    <string name="project_id" translatable="false">zombie-siege-admob</string>
+</resources>
